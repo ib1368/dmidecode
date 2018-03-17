@@ -413,7 +413,7 @@ static void dmi_bios_characteristics_x2(u8 code, const char *prefix)
 /*
  * 7.2 System Information (Type 1)
  */
-
+char version_str[50];
 static void dmi_system_uuid(const u8 *p, u16 ver)
 {
 	int only0xFF = 1, only0x00 = 1;
@@ -444,12 +444,13 @@ static void dmi_system_uuid(const u8 *p, u16 ver)
 	 * network byte order, so I am reluctant to apply the byte-swapping
 	 * for older versions.
 	 */
+
 	if (ver >= 0x0206)
-		printf("%02X%02X%02X%02X-%02X%02X-%02X%02X-%02X%02X-%02X%02X%02X%02X%02X%02X",
+		sprintf(version_str, "%02X%02X%02X%02X-%02X%02X-%02X%02X-%02X%02X-%02X%02X%02X%02X%02X%02X",
 			p[3], p[2], p[1], p[0], p[5], p[4], p[7], p[6],
 			p[8], p[9], p[10], p[11], p[12], p[13], p[14], p[15]);
 	else
-		printf("%02X%02X%02X%02X-%02X%02X-%02X%02X-%02X%02X-%02X%02X%02X%02X%02X%02X",
+		sprintf(version_str, "%02X%02X%02X%02X-%02X%02X-%02X%02X-%02X%02X-%02X%02X%02X%02X%02X%02X",
 			p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7],
 			p[8], p[9], p[10], p[11], p[12], p[13], p[14], p[15]);
 }
@@ -4583,7 +4584,7 @@ static void dmi_table_string(const struct dmi_header *h, const u8 *data, u16 ver
 	{
 		case 0x108:
 			dmi_system_uuid(data + offset, ver);
-			printf("\n");
+			//printf("\n");
 			break;
 		case 0x305:
 			printf("%s\n", dmi_chassis_type(data[offset]));
@@ -5009,8 +5010,11 @@ static int address_from_efi(off_t *address)
 	return ret;
 }
 
-int main(int argc, char * const argv[])
+char* dmidecode_system_uuid()
 {
+	int argc = 3;
+	char* const argv[3] = {"dmidecode", "-s", "system-uuid"};
+
 	int ret = 0;                /* Returned value */
 	int found = 0;
 	off_t fp;
@@ -5018,6 +5022,8 @@ int main(int argc, char * const argv[])
 	int efi;
 	u8 *buf;
 
+	int i = 0;
+	for (i=0; i<50; i++) version_str[i] = 0;
 	/*
 	 * We don't want stdout and stderr to be mixed up if both are
 	 * redirected to the same file.
@@ -5202,6 +5208,5 @@ done:
 	free(buf);
 exit_free:
 	free(opt.type);
-
-	return ret;
+	return version_str;
 }
